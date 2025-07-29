@@ -1,50 +1,73 @@
 
-export interface ExecutiveData {
-    id: string;
-    _id?: string; // MongoDB _id field
-    cardName: string;
-    name: string;
-    title: string;
-    email: string;
-    phone: string;
-    address: string;
-    profilePicture: string;
-    companyLogo: string;
-    cardBackLogoUrl: string;
-    socials: {
-        linkedin: { url: string; enabled: boolean };
-        instagram: { url: string; enabled: boolean };
-        whatsapp: { url: string; enabled: boolean };
-        facebook: { url: string; enabled: boolean };
-        twitter: { url: string; enabled: boolean };
-        youtube: { url: string; enabled: boolean };
-    };
-    accentColor: string;
-}
-
 export interface SocialLink {
     url: string;
     enabled: boolean;
 }
 
-export const DEFAULT_CARD_DATA: ExecutiveData = {
-    id: "default-card",
-    cardName: "My Business Card",
+export interface Socials {
+  linkedin: SocialLink;
+  instagram: SocialLink;
+  twitter: SocialLink;
+  youtube: SocialLink;
+  facebook: SocialLink;
+  whatsapp: SocialLink;
+}
+
+export interface StyleOptions {
+  accentColor: string;
+}
+
+export interface ExecutiveData {
+    id: string;
+    cardName: string;
+    name: string;
+    title: string;
+    companyName: string;
+    companyWebsite: string;
+    phone: string;
+    email: string;
+    address: string;
+    addressLink: string;
+    calendlyLink: string;
+    socials: Socials;
+    profilePictureUrl?: string | null;
+    companyLogoUrl?: string | null;
+    companyLogoPosition: { x: number, y: number };
+    companyLogoSize: number;
+    cardBackLogoUrl?: string | null;
+    cardBackLogoSize: number;
+    styleOptions: StyleOptions;
+    meetingButtonText: string;
+    saveContactButtonText: string;
+}
+
+export const DEFAULT_CARD_DATA: Omit<ExecutiveData, 'id' | 'cardName'> = {
     name: "Test Name",
-    title: "Professional Title",
-    email: "your.email@example.com",
-    phone: "+1 (555) 123-4567",
-    address: "123 Business St, City, State 12345",
-    profilePicture: "",
-    companyLogo: "",
-    cardBackLogoUrl: "",
+    title: "Your Title",
+    companyName: "Your Company",
+    companyWebsite: "https://example.com",
+    phone: "+1234567890",
+    email: "email@example.com",
+    address: "123 Main St, Anytown, USA",
+    addressLink: "https://maps.google.com/?q=123+Main+St,+Anytown,+USA",
+    calendlyLink: "https://calendly.com/your-username",
     socials: {
-        linkedin: { url: "", enabled: false },
+        linkedin: { url: "", enabled: true },
         instagram: { url: "", enabled: false },
-        whatsapp: { url: "", enabled: false },
+        twitter: { url: "", enabled: true },
+        youtube: { url: "", enabled: false },
         facebook: { url: "", enabled: false },
-        twitter: { url: "", enabled: false },
-        youtube: { url: "", enabled: false }
+        whatsapp: { url: "", enabled: false },
     },
-    accentColor: "#00D1A6"
+    profilePictureUrl: null,
+    companyLogoUrl: null,
+    companyLogoPosition: { x: 50, y: 50 },
+    companyLogoSize: 140,
+    cardBackLogoUrl: null,
+    cardBackLogoSize: 150,
+    styleOptions: {
+        accentColor: "#3b82f6",
+    },
+    meetingButtonText: "Book a Meeting",
+    saveContactButtonText: "Save Contact",
 };

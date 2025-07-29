@@ -1,7 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { ExecutiveData } from '../types';
+import { ExecutiveData, DEFAULT_CARD_DATA } from '../types';
 import { CardPreview } from './Card';
+import { CardBack } from './Card';
+import { Icons } from './AppUI';
+import { apiService } from '../services/api';
 
 // --- BASE MODAL ---
 interface ModalProps {
@@ -128,11 +131,11 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, card, o
 
         try {
             const cardId = card._id || card.id;
-            // Assuming apiService is available globally or imported elsewhere
-            // For now, we'll simulate a successful response
-            const response = { data: { shortUrl: `https://short.url/${cardId}` } };
+            const response = await apiService.createShortUrl(cardId);
             
-            if (response.data) {
+            if (response.error) {
+                setError(response.error);
+            } else if (response.data) {
                 setShortUrl(response.data.shortUrl);
             }
         } catch (error) {
@@ -200,7 +203,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, card, o
                             'bg-gray-600 cursor-not-allowed'
                         }`}
                     >
-                        {copied ? <span>✓</span> : <span>📋</span>}
+                        {copied ? <Icons.check/> : <Icons.copy />}
                     </button>
                 </div>
 
@@ -243,16 +246,7 @@ export const InteractivePreviewModal: React.FC<InteractivePreviewModalProps> = (
                            <CardPreview data={card} onUpdate={() => {}} />
                         </div>
                         <div className="card-back absolute w-full h-full top-0 left-0">
-                           <div className="premium-card-base premium-card-bg relative overflow-hidden rounded-2xl p-6">
-                               <div className="text-center">
-                                   <h2 className="text-2xl font-bold text-white mb-4">Digital Business Card</h2>
-                                   <p className="text-gray-300 mb-6">Scan or tap to connect</p>
-                                   <div className="text-center">
-                                       <p className="text-[#00D1A6] font-semibold">MAKE WAVES</p>
-                                       <p className="text-gray-400 text-sm mt-2">Powered by Glydus</p>
-                                   </div>
-                               </div>
-                           </div>
+                           <CardBack data={card} />
                         </div>
                     </div>
                 </div>
@@ -261,7 +255,7 @@ export const InteractivePreviewModal: React.FC<InteractivePreviewModalProps> = (
                     onClick={() => setIsFlipped(f => !f)}
                     className="mb-auto flex items-center gap-2 bg-dark-surface hover:bg-dark-panel text-dark-text-primary font-semibold py-2 px-4 border border-dark-border rounded-lg shadow-sm transition-colors duration-200"
                 >
-                    <span>🔄</span>
+                    <Icons.flip />
                     Flip Card
                 </button>
             </div>

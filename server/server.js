@@ -23,12 +23,8 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Connect to MongoDB
 const connectDB = async () => {
   try {
-    if (process.env.MONGODB_URI) {
-      await mongoose.connect(process.env.MONGODB_URI);
-      console.log('MongoDB connected successfully');
-    } else {
-      console.log('No MongoDB URI provided, running without database');
-    }
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('MongoDB connected successfully');
   } catch (error) {
     console.error('Error connecting to MongoDB:', error.message);
     console.log('Starting server without database connection...');
@@ -208,20 +204,14 @@ app.get('/shared/:shortId', async (req, res) => {
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  // Serve static files from the dist directory
   app.use(express.static(path.join(__dirname, '../dist')));
   
-  // Handle client-side routing
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../dist/index.html'));
   });
 }
 
 // Start server
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}
-
-export default app; 
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+}); 

@@ -3,25 +3,36 @@ import type { ExecutiveData } from './types';
 import { DEFAULT_CARD_DATA as defaultCard } from './types';
 
 export const executiveData: ExecutiveData = {
-    id: "default-card",
-    cardName: "My Business Card",
+    id: `card-${Date.now()}`,
+    cardName: "Default Profile",
     name: "Test User",
-    title: "Professional Title",
-    email: "your.email@example.com",
-    phone: "+1 (555) 123-4567",
-    address: "123 Business St, City, State 12345",
-    profilePicture: "",
-    companyLogo: "",
-    cardBackLogoUrl: "",
+    title: "Founder & CEO, Multisteer & Glydus",
+    companyName: "Glydus",
+    companyWebsite: "https://glydus.com/",
+    profilePictureUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=250&h=250&fit=crop&crop=faces",
+    phone: "+919876543210",
+    email: "atul.gupta@multisteer.com",
+    address: "Nagpur, Maharashtra, India",
+    addressLink: "https://maps.google.com/?q=Nagpur,+Maharashtra,+India",
+    calendlyLink: "https://calendly.com/your-link",
     socials: {
-        linkedin: { url: "", enabled: false },
-        instagram: { url: "", enabled: false },
-        whatsapp: { url: "", enabled: false },
-        facebook: { url: "", enabled: false },
-        twitter: { url: "", enabled: false },
-        youtube: { url: "", enabled: false }
+      linkedin: { url: "https://www.linkedin.com/in/atul-gupta-904bb7127/", enabled: true },
+      instagram: { url: "https://www.instagram.com/atulgupta_1504?igsh=MXRrZ3l2NmVzdmZiag==", enabled: true },
+      twitter: { url: "https://x.com/Glydus_IN", enabled: true },
+      youtube: { url: "https://www.youtube.com/@Glydus", enabled: true },
+      facebook: { url: "https://www.facebook.com/share/16bWt5DqJ6/", enabled: true },
+      whatsapp: { url: "https://wa.me/919876543210", enabled: true },
     },
-    accentColor: "#00D1A6"
-};
+    styleOptions: {
+      accentColor: '#00D1A6',
+    },
+    meetingButtonText: 'Book Meeting',
+    saveContactButtonText: 'Save Contact',
+    companyLogoUrl: undefined,
+    companyLogoPosition: { x: 50, y: 50 },
+    companyLogoSize: 140,
+    cardBackLogoUrl: undefined,
+    cardBackLogoSize: 160,
+  };
 
 export const DEFAULT_CARD_DATA = defaultCard;

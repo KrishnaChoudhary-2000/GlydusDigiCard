@@ -73,20 +73,4 @@ const cardSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Add a virtual id field that maps to _id
-cardSchema.virtual('id').get(function() {
-    return this._id.toHexString();
-});
-
-// Ensure virtual fields are serialized
-cardSchema.set('toJSON', {
-    virtuals: true,
-    transform: function(doc, ret) {
-        ret.id = ret._id;
-        delete ret._id;
-        delete ret.__v;
-        return ret;
-    }
-});
-
 export default mongoose.model('Card', cardSchema); 

@@ -49,9 +49,7 @@ router.post('/shorten', async (req, res) => {
         shortUrls.set(shortId, cardId);
         
         // Create short URL - use frontend URL for better compatibility
-        const frontendUrl = process.env.NODE_ENV === 'production'
-          ? 'https://your-vercel-app-name.vercel.app'
-          : (req.get('origin') || 'http://localhost:5173');
+        const frontendUrl = req.get('origin') || 'http://localhost:5173';
         const shortUrl = `${frontendUrl}/?shortId=${shortId}`;
         
         res.json({ 

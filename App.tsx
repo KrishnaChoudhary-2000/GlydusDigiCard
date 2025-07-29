@@ -68,18 +68,20 @@ const App: React.FC = () => {
     const sharedParam = urlParams.get('shared');
     const cardIdParam = urlParams.get('cardId');
 
-    // Prevent access to admin dashboard from shared links
+    // Security: Prevent access to admin dashboard from shared links
     const isSharedLink = cardDataParam || shortIdParam || sharedParam;
     
     // If this is a shared link, prevent any navigation to admin dashboard
     if (isSharedLink) {
         // Disable browser back button for shared links
         useEffect(() => {
-            const handleBeforeUnload = () => {
+            const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+                // Allow normal navigation but prevent going back to admin
                 if (window.history.length > 1) {
                     window.history.pushState(null, '', window.location.href);
                 }
             };
+
             window.addEventListener('beforeunload', handleBeforeUnload);
             return () => window.removeEventListener('beforeunload', handleBeforeUnload);
         }, []);
@@ -194,7 +196,7 @@ const App: React.FC = () => {
             const response = await apiService.createCard(newCardData);
             if (response.data) {
                 setCards([...cards, response.data]);
-                setSelectedCardId(response.data._id || response.data.id || null);
+                setSelectedCardId(response.data._id);
                 setActiveModal(null);
                 showToast("Card created successfully!");
             } else {
@@ -241,13 +243,10 @@ const App: React.FC = () => {
         }
     };
 
-    const handleUpdateCard = async (updates: Partial<ExecutiveData>) => {
-        if (!selectedCard) return;
-        
+    const handleUpdateCard = async (updatedCard: ExecutiveData) => {
         // Store changes locally but don't save to database yet
-        const updatedCard = { ...selectedCard, ...updates };
         setUnsavedChanges(updatedCard);
-        setCards(cards.map(c => (c._id || c.id) === (selectedCard._id || selectedCard.id) ? updatedCard : c));
+        setCards(cards.map(c => (c._id || c.id) === (updatedCard._id || updatedCard.id) ? updatedCard : c));
     };
 
     const handleSaveCard = async () => {
@@ -258,7 +257,7 @@ const App: React.FC = () => {
             const response = await apiService.updateCard(cardId, unsavedChanges);
             
             if (response.data) {
-                setCards(cards.map(c => (c._id || c.id) === cardId ? response.data! : c));
+                setCards(cards.map(c => (c._id || c.id) === cardId ? response.data : c));
                 setUnsavedChanges(null);
                 showToast("Card saved successfully!");
             } else {

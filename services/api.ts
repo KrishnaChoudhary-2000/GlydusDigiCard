@@ -1,8 +1,6 @@
 import type { ExecutiveData } from '../types';
 
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-vercel-app-name.vercel.app/api'
-  : 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 const IMGBB_API_KEY = 'a4ffb711bb7e22187e16d0a6398d35d0';
 const IMGBB_API_URL = 'https://api.imgbb.com/1/upload';
 
