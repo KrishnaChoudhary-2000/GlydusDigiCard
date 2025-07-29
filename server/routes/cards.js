@@ -48,8 +48,17 @@ router.post('/shorten', async (req, res) => {
         // Store the mapping
         shortUrls.set(shortId, cardId);
         
-        // Create short URL - use frontend URL for better compatibility
-        const frontendUrl = req.get('origin') || 'http://localhost:5173';
+        // Create short URL - use production domain for shared links
+        const getFrontendUrl = () => {
+            // In production, use the same domain as the request
+            if (req.get('host') && req.get('host') !== 'localhost:5000') {
+                return `https://${req.get('host')}`;
+            }
+            // In development, use localhost
+            return 'http://localhost:5173';
+        };
+        
+        const frontendUrl = getFrontendUrl();
         const shortUrl = `${frontendUrl}/?shortId=${shortId}`;
         
         res.json({ 

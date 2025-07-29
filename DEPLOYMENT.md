@@ -26,6 +26,7 @@
    GEMINI_API_KEY=your_actual_api_key_here
    MONGODB_URI=your_mongodb_connection_string
    NODE_ENV=production
+   VITE_API_URL=https://your-vercel-app-name.vercel.app/api
    ```
 
 4. **Deploy**

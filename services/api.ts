@@ -1,6 +1,19 @@
 import type { ExecutiveData } from '../types';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+// Automatically determine API URL based on environment
+const getApiBaseUrl = () => {
+  // In production (Vercel), use the same domain
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+    const baseUrl = `${window.location.origin}/api`;
+    console.log('Using production API URL:', baseUrl);
+    return baseUrl;
+  }
+  // In development, use localhost
+  console.log('Using development API URL: http://localhost:5000/api');
+  return 'http://localhost:5000/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 const IMGBB_API_KEY = 'a4ffb711bb7e22187e16d0a6398d35d0';
 const IMGBB_API_URL = 'https://api.imgbb.com/1/upload';
 
@@ -30,7 +43,10 @@ class ApiService {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const url = `${API_BASE_URL}${endpoint}`;
+      console.log('Making API request to:', url);
+      
+      const response = await fetch(url, {
         headers: {
           'Content-Type': 'application/json',
           ...options.headers,
@@ -38,16 +54,21 @@ class ApiService {
         ...options,
       });
 
-      const data = await response.json();
-
+      console.log('API response status:', response.status);
+      
       if (!response.ok) {
-        return { error: data.message || 'An error occurred' };
+        const errorText = await response.text();
+        console.error('API error response:', errorText);
+        return { error: `HTTP ${response.status}: ${errorText}` };
       }
+
+      const data = await response.json();
 
       // Handle MongoDB _id field - convert to id for frontend compatibility
       const processedData = this.processMongoData(data);
       return { data: processedData };
     } catch (error) {
+      console.error('API request failed:', error);
       return { error: 'Network error occurred' };
     }
   }
