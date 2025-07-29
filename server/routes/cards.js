@@ -7,6 +7,9 @@ const router = express.Router();
 let shortUrls = new Map();
 let urlCounter = 0;
 
+// In-memory storage for cards (fallback when MongoDB is not available)
+let inMemoryCards = new Map();
+
 // Export shortUrls for server access
 router.shortUrls = shortUrls;
 
@@ -18,6 +21,13 @@ function generateShortId() {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
+}
+
+// Generate a unique ID for new cards (fallback when MongoDB is not available)
+function generateCardId() {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substr(2, 9);
+    return `card-${timestamp}-${random}`;
 }
 
 // Create short URL
@@ -141,8 +151,44 @@ router.get('/card/:shortId', async (req, res) => {
 // Get all cards
 router.get('/', async (req, res) => {
     try {
-        const cards = await Card.find();
-        res.json(cards);
+        // Try to use MongoDB first
+        try {
+            const cards = await Card.find();
+            return res.json(cards);
+        } catch (dbError) {
+            console.log('Database connection failed, using in-memory storage');
+            // Fallback to in-memory data if database fails
+            const fallbackCards = Array.from(inMemoryCards.values());
+            if (fallbackCards.length === 0) {
+                // Add a sample card if no cards exist
+                const sampleCard = {
+                    _id: 'card-1753786588098',
+                    cardName: 'Sample Business Card',
+                    name: 'John Doe',
+                    title: 'CEO',
+                    email: 'john@example.com',
+                    phone: '+1 (555) 123-4567',
+                    address: '123 Business St, City, State 12345',
+                    profilePicture: '',
+                    companyLogo: '',
+                    cardBackLogoUrl: '',
+                    socials: {
+                        linkedin: { url: '', enabled: false },
+                        instagram: { url: '', enabled: false },
+                        whatsapp: { url: '', enabled: false },
+                        facebook: { url: '', enabled: false },
+                        twitter: { url: '', enabled: false },
+                        youtube: { url: '', enabled: false }
+                    },
+                    accentColor: '#00D1A6',
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
+                inMemoryCards.set(sampleCard._id, sampleCard);
+                return res.json([sampleCard]);
+            }
+            return res.json(fallbackCards);
+        }
     } catch (error) {
         console.error('Error fetching cards:', error);
         res.status(500).json({ error: 'Failed to fetch cards' });
@@ -152,11 +198,22 @@ router.get('/', async (req, res) => {
 // Get single card
 router.get('/:id', async (req, res) => {
     try {
-        const card = await Card.findById(req.params.id);
-        if (!card) {
-            return res.status(404).json({ error: 'Card not found' });
+        // Try to use MongoDB first
+        try {
+            const card = await Card.findById(req.params.id);
+            if (!card) {
+                return res.status(404).json({ error: 'Card not found' });
+            }
+            return res.json(card);
+        } catch (dbError) {
+            console.log('Database connection failed, using in-memory storage');
+            // Fallback to in-memory data if database fails
+            const card = inMemoryCards.get(req.params.id);
+            if (!card) {
+                return res.status(404).json({ error: 'Card not found' });
+            }
+            return res.json(card);
         }
-        res.json(card);
     } catch (error) {
         console.error('Error fetching card:', error);
         res.status(500).json({ error: 'Failed to fetch card' });
@@ -166,9 +223,24 @@ router.get('/:id', async (req, res) => {
 // Create new card
 router.post('/', async (req, res) => {
     try {
-        const card = new Card(req.body);
-        const savedCard = await card.save();
-        res.status(201).json(savedCard);
+        // Try to use MongoDB first
+        try {
+            const card = new Card(req.body);
+            const savedCard = await card.save();
+            return res.status(201).json(savedCard);
+        } catch (dbError) {
+            console.log('Database connection failed, using in-memory storage');
+            // Fallback: store in memory
+            const cardId = generateCardId();
+            const fallbackCard = {
+                ...req.body,
+                _id: cardId,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            };
+            inMemoryCards.set(cardId, fallbackCard);
+            return res.status(201).json(fallbackCard);
+        }
     } catch (error) {
         console.error('Error creating card:', error);
         res.status(500).json({ error: 'Failed to create card' });
@@ -178,11 +250,29 @@ router.post('/', async (req, res) => {
 // Update card
 router.put('/:id', async (req, res) => {
     try {
-        const card = await Card.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!card) {
-            return res.status(404).json({ error: 'Card not found' });
+        // Try to use MongoDB first
+        try {
+            const card = await Card.findByIdAndUpdate(req.params.id, req.body, { new: true });
+            if (!card) {
+                return res.status(404).json({ error: 'Card not found' });
+            }
+            return res.json(card);
+        } catch (dbError) {
+            console.log('Database connection failed, using in-memory storage');
+            // Fallback: update in memory
+            const existingCard = inMemoryCards.get(req.params.id);
+            if (!existingCard) {
+                return res.status(404).json({ error: 'Card not found' });
+            }
+            const updatedCard = {
+                ...existingCard,
+                ...req.body,
+                _id: req.params.id,
+                updatedAt: new Date()
+            };
+            inMemoryCards.set(req.params.id, updatedCard);
+            return res.json(updatedCard);
         }
-        res.json(card);
     } catch (error) {
         console.error('Error updating card:', error);
         res.status(500).json({ error: 'Failed to update card' });
@@ -192,11 +282,23 @@ router.put('/:id', async (req, res) => {
 // Delete card
 router.delete('/:id', async (req, res) => {
     try {
-        const card = await Card.findByIdAndDelete(req.params.id);
-        if (!card) {
-            return res.status(404).json({ error: 'Card not found' });
+        // Try to use MongoDB first
+        try {
+            const card = await Card.findByIdAndDelete(req.params.id);
+            if (!card) {
+                return res.status(404).json({ error: 'Card not found' });
+            }
+            return res.json({ message: 'Card deleted successfully' });
+        } catch (dbError) {
+            console.log('Database connection failed, using in-memory storage');
+            // Fallback: delete from memory
+            const card = inMemoryCards.get(req.params.id);
+            if (!card) {
+                return res.status(404).json({ error: 'Card not found' });
+            }
+            inMemoryCards.delete(req.params.id);
+            return res.json({ message: 'Card deleted successfully' });
         }
-        res.json({ message: 'Card deleted successfully' });
     } catch (error) {
         console.error('Error deleting card:', error);
         res.status(500).json({ error: 'Failed to delete card' });
