@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #121212;
+    position: relative;
+  }
+  
+  /* Global noise texture */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMDAgMzAwIj48ZmlsdGVyIGlkPSJub2lzZSI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNzUiIG51bU9jdGFXZXM9IjQiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAiIGZpbHRlcj0idXJsKCNub2lzZSkiLz48L3N2Zz4=');
+    opacity: 0.015;
+    pointer-events: none;
+    z-index: -1;
+  }
+}
+
+@layer components {
+  /* Card-specific noise texture */
+  .premium-card-bg::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMDAgMzAwIj48ZmlsdGVyIGlkPSJub2lzZSI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNzUiIG51bU9jdGFXZXM9IjQiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAiIGZpbHRlcj0idXJsKCNub2lzZSkiLz48L3N2Zz4=');
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: inherit;
+  }
+
+  .premium-card-base {
+    position: relative;
+    /* Dark grey background */
+    background: linear-gradient(135deg, #2d2d2d 0%, #1f1f1f 50%, #2a2a2a 100%);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 209, 166, 0.1);
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .premium-card-base:hover {
+    transform: translateY(-8px) scale(1.02);
+    /* Enhanced green glow effect */
+    box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.3), 0 0 40px -10px rgba(0, 209, 166, 0.3);
+  }
+  
+  .premium-card-base::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    border: 1px solid rgba(0, 209, 166, 0.2); /* Green border to match accent */
+    pointer-events: none;
+  }
+
+  .premium-h1-shadow {
+    text-shadow: 0 3px 12px rgba(0, 0, 0, 0.5);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: 1.1;
+    max-width: 100%;
+    padding: 0 4px;
+  }
+
+  .premium-action-button {
+    background: linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background 0.3s, box-shadow 0.3s, color 0.3s;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+
+  .premium-action-button:hover {
+    background: linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.05));
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.3), 0 0 25px -3px rgba(0, 209, 166, 0.3);
+  }
+
+  .contact-row-link {
+    display: block;
+    border-radius: 0.5rem; /* 8px */
+    transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+  }
+  
+  .contact-row-link:hover {
+    background-color: rgba(0, 209, 166, 0.1);
+    transform: scale(1.02);
+  }
+
+  .social-icon-link {
+    color: #9E9E9E; /* brand-muted */
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    width: 3rem; /* 48px */
+    height: 3rem; /* 48px */
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .social-icon-link:hover {
+    transform: scale(1.1) translateY(-2px);
+    background-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 20px -5px currentColor; /* Glow with the icon's hover color */
+  }
+
+  .perspective {
+    perspective: 1500px;
+  }
+  
+  .card-flipper {
+    transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+    transform-style: preserve-3d;
+  }
+  
+  .card-flipper.is-flipped {
+    transform: rotateY(180deg);
+  }
+  
+  .card-face {
+    backface-visibility: hidden;
+  }
+  
+  .card-back {
+    transform: rotateY(180deg);
+  }
+
+  /* Ensure proper text wrapping for names */
+  .name-display {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: 1.1;
+    padding: 0 8px;
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-word;
+  }
+} 
