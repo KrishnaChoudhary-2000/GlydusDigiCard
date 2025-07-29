@@ -15,6 +15,14 @@ const cardSchema = new mongoose.Schema({
         type: String,
         default: 'Professional Title'
     },
+    companyName: {
+        type: String,
+        default: 'Your Company'
+    },
+    companyWebsite: {
+        type: String,
+        default: 'https://example.com'
+    },
     email: {
         type: String,
         default: 'your.email@example.com'
@@ -27,17 +35,37 @@ const cardSchema = new mongoose.Schema({
         type: String,
         default: '123 Business St, City, State 12345'
     },
-    profilePicture: {
+    addressLink: {
+        type: String,
+        default: 'https://maps.google.com/?q=123+Business+St,+City,+State+12345'
+    },
+    calendlyLink: {
+        type: String,
+        default: 'https://calendly.com/your-username'
+    },
+    profilePictureUrl: {
         type: String,
         default: ''
     },
-    companyLogo: {
+    companyLogoUrl: {
         type: String,
         default: ''
+    },
+    companyLogoPosition: {
+        x: { type: Number, default: 50 },
+        y: { type: Number, default: 50 }
+    },
+    companyLogoSize: {
+        type: Number,
+        default: 140
     },
     cardBackLogoUrl: {
         type: String,
         default: ''
+    },
+    cardBackLogoSize: {
+        type: Number,
+        default: 160
     },
     socials: {
         linkedin: {
@@ -65,9 +93,19 @@ const cardSchema = new mongoose.Schema({
             enabled: { type: Boolean, default: false }
         }
     },
-    accentColor: {
+    styleOptions: {
+        accentColor: {
+            type: String,
+            default: '#00D1A6'
+        }
+    },
+    meetingButtonText: {
         type: String,
-        default: '#00D1A6'
+        default: 'Book a Meeting'
+    },
+    saveContactButtonText: {
+        type: String,
+        default: 'Save Contact'
     }
 }, {
     timestamps: true

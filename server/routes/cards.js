@@ -166,12 +166,19 @@ router.get('/', async (req, res) => {
                     cardName: 'Sample Business Card',
                     name: 'John Doe',
                     title: 'CEO',
+                    companyName: 'Sample Company',
+                    companyWebsite: 'https://example.com',
                     email: 'john@example.com',
                     phone: '+1 (555) 123-4567',
                     address: '123 Business St, City, State 12345',
-                    profilePicture: '',
-                    companyLogo: '',
+                    addressLink: 'https://maps.google.com/?q=123+Business+St,+City,+State+12345',
+                    calendlyLink: 'https://calendly.com/your-username',
+                    profilePictureUrl: '',
+                    companyLogoUrl: '',
+                    companyLogoPosition: { x: 50, y: 50 },
+                    companyLogoSize: 140,
                     cardBackLogoUrl: '',
+                    cardBackLogoSize: 160,
                     socials: {
                         linkedin: { url: '', enabled: false },
                         instagram: { url: '', enabled: false },
@@ -180,7 +187,11 @@ router.get('/', async (req, res) => {
                         twitter: { url: '', enabled: false },
                         youtube: { url: '', enabled: false }
                     },
-                    accentColor: '#00D1A6',
+                    styleOptions: {
+                        accentColor: '#00D1A6'
+                    },
+                    meetingButtonText: 'Book a Meeting',
+                    saveContactButtonText: 'Save Contact',
                     createdAt: new Date(),
                     updatedAt: new Date()
                 };

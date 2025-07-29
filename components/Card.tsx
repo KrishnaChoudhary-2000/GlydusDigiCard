@@ -58,7 +58,10 @@ export const CardPreview: React.FC<{ data: ExecutiveData | null; onUpdate: (upda
       );
     }
     
-    const { name, title, companyWebsite, profilePictureUrl, companyLogoUrl, socials, styleOptions } = data;
+    const { name, title, companyWebsite, profilePictureUrl, companyLogoUrl, socials } = data;
+    
+    // Safety check for styleOptions
+    const styleOptions = data.styleOptions || { accentColor: '#00D1A6' };
   
     const formattedPhone = data.phone.startsWith('+91')
       ? data.phone.replace(/^\+(\d{2})(\d{5})(\d{5})/, '+$1 $2 $3')

@@ -179,10 +179,35 @@ const socialIcons: Record<string, React.FC<{ className?: string }>> = {
 };
 
 
-export const EditorPanel: React.FC<EditorPanelProps> = ({ card, onUpdate, hasUnsavedChanges = false }) => {
+export const EditorPanel: React.FC<EditorPanelProps> = ({ card, onUpdate, hasUnsavedChanges }) => {
+    if (!card) {
+        return (
+            <div className="bg-dark-surface rounded-3xl shadow-2xl p-6 md:p-8 w-full max-w-sm mx-auto flex items-center justify-center font-sans text-dark-text-secondary h-full">
+                No card selected. Please select or create a card to edit.
+            </div>
+        );
+    }
+
+    // Safety check for styleOptions
+    const styleOptions = card.styleOptions || { accentColor: '#00D1A6' };
     
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        onUpdate({ ...card, [e.target.name]: e.target.value });
+        const { name, value, type, checked } = e.target;
+        
+        if (name.includes('.')) {
+            // Handle nested properties like socials.linkedin.url
+            const [parent, child] = name.split('.');
+            const parentObj = card[parent as keyof ExecutiveData] as any;
+            onUpdate({
+                ...card,
+                [parent]: {
+                    ...parentObj,
+                    [child]: type === 'checkbox' ? checked : value
+                }
+            });
+        } else {
+            onUpdate({ ...card, [name]: type === 'checkbox' ? checked : value });
+        }
     };
     
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'profilePictureUrl' | 'companyLogoUrl' | 'cardBackLogoUrl') => {
@@ -225,7 +250,7 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ card, onUpdate, hasUns
     };
     
     const handleStyleChange = (field: keyof ExecutiveData['styleOptions'], value: string) => {
-        onUpdate({ ...card, styleOptions: { ...card.styleOptions, [field]: value } });
+        onUpdate({ ...card, styleOptions: { ...styleOptions, [field]: value } });
     }
 
     return (
@@ -333,8 +358,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ card, onUpdate, hasUns
                      <div className="flex items-center gap-4">
                         <label htmlFor="accentColor" className="block text-sm font-medium text-dark-text-secondary">Accent Color</label>
                         <div className="relative">
-                            <input type="color" id="accentColor" value={card.styleOptions.accentColor} onChange={(e) => handleStyleChange('accentColor', e.target.value)} className="w-10 h-10 p-0 border-none bg-transparent appearance-none cursor-pointer absolute opacity-0 inset-0" />
-                            <div className="w-10 h-10 rounded-lg border-2 border-dark-border ring-2 ring-offset-2 ring-offset-dark-panel ring-transparent" style={{ backgroundColor: card.styleOptions.accentColor }}></div>
+                            <input type="color" id="accentColor" value={styleOptions.accentColor} onChange={(e) => handleStyleChange('accentColor', e.target.value)} className="w-10 h-10 p-0 border-none bg-transparent appearance-none cursor-pointer absolute opacity-0 inset-0" />
+                            <div className="w-10 h-10 rounded-lg border-2 border-dark-border ring-2 ring-offset-2 ring-offset-dark-panel ring-transparent" style={{ backgroundColor: styleOptions.accentColor }}></div>
                         </div>
                      </div>
                 </div>
