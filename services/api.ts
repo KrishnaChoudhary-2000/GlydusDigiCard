@@ -84,6 +84,18 @@ class ApiService {
       if (processed._id && !processed.id) {
         processed.id = processed._id;
       }
+      
+      // Migrate old data structure to new structure
+      if (processed.accentColor && !processed.styleOptions) {
+        processed.styleOptions = { accentColor: processed.accentColor };
+        delete processed.accentColor;
+      }
+      
+      // Ensure styleOptions exists
+      if (!processed.styleOptions) {
+        processed.styleOptions = { accentColor: '#00D1A6' };
+      }
+      
       return processed;
     }
     
