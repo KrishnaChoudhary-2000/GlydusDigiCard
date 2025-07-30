@@ -282,7 +282,16 @@ const App: React.FC = () => {
             <main className="flex-1 flex flex-col overflow-hidden">
                 <Header 
                     onPreviewClick={() => selectedCard && setActiveModal('preview')}
-                    onShareClick={() => selectedCard && setActiveModal('share')}
+                    onShareClick={() => {
+                        if (selectedCard) {
+                            // Check if card is saved (has _id from database)
+                            if (selectedCard._id) {
+                                setActiveModal('share');
+                            } else {
+                                showToast("Please save the card first before sharing");
+                            }
+                        }
+                    }}
                     onSaveClick={handleSaveCard}
                     hasUnsavedChanges={!!unsavedChanges}
                 />

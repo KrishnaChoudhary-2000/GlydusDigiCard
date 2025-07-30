@@ -117,10 +117,10 @@ export const CardPreview: React.FC<{ data: ExecutiveData | null; onUpdate: (upda
                 rel="noopener noreferrer"
                 className="absolute transition-transform duration-300 hover:scale-105"
                 style={{
-                  left: `${data.companyLogoPosition.x}%`,
-                  top: `${data.companyLogoPosition.y}%`,
+                  left: `${data.companyLogoPosition?.x || 50}%`,
+                  top: `${data.companyLogoPosition?.y || 50}%`,
                   transform: 'translate(-50%, -50%)',
-                  width: `${data.companyLogoSize}px`,
+                  width: `${data.companyLogoSize || 140}px`,
                 }}
               >
                 {companyLogoUrl ? (
@@ -224,7 +224,7 @@ export const CardBack: React.FC<{ data: ExecutiveData | null }> = ({ data }) => 
               src={data.cardBackLogoUrl} 
               alt="Custom Card Back Logo" 
               className="object-contain"
-              style={{ width: `${data.cardBackLogoSize}px`, height: `${data.cardBackLogoSize}px` }}
+                              style={{ width: `${data.cardBackLogoSize || 160}px`, height: `${data.cardBackLogoSize || 160}px` }}
             />
           ) : null}
         </div>

@@ -131,15 +131,19 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, card, o
 
         try {
             const cardId = card._id || card.id;
+            console.log('Attempting to create short URL for card:', cardId);
             const response = await apiService.createShortUrl(cardId);
             
             if (response.error) {
+                console.error('Short URL creation failed:', response.error);
                 setError(response.error);
             } else if (response.data) {
+                console.log('Short URL created successfully:', response.data.shortUrl);
                 setShortUrl(response.data.shortUrl);
             }
         } catch (error) {
-            setError('Failed to generate short URL');
+            console.error('Short URL creation error:', error);
+            setError('Failed to generate short URL. Please try again.');
         } finally {
             setIsGenerating(false);
         }

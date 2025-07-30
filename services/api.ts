@@ -1,15 +1,13 @@
 import type { ExecutiveData } from '../types';
 
-// Automatically determine API URL based on environment
+// Dynamic API configuration for both local and production
 const getApiBaseUrl = () => {
-  // In production (Vercel), use the same domain
+  // Check if we're in production (Vercel)
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    const baseUrl = `${window.location.origin}/api`;
-    console.log('Using production API URL:', baseUrl);
-    return baseUrl;
+    // Use environment variable or fallback to a deployed backend URL
+    return process.env.REACT_APP_API_URL || 'https://your-backend-url.vercel.app/api';
   }
-  // In development, use localhost
-  console.log('Using development API URL: http://localhost:5000/api');
+  // Local development
   return 'http://localhost:5000/api';
 };
 
@@ -94,6 +92,33 @@ class ApiService {
       // Ensure styleOptions exists
       if (!processed.styleOptions) {
         processed.styleOptions = { accentColor: '#00D1A6' };
+      }
+      
+      // Ensure companyLogoPosition exists
+      if (!processed.companyLogoPosition) {
+        processed.companyLogoPosition = { x: 50, y: 50 };
+      }
+      
+      // Ensure companyLogoSize exists
+      if (!processed.companyLogoSize) {
+        processed.companyLogoSize = 140;
+      }
+      
+      // Ensure cardBackLogoSize exists
+      if (!processed.cardBackLogoSize) {
+        processed.cardBackLogoSize = 160;
+      }
+      
+      // Ensure socials structure exists
+      if (!processed.socials) {
+        processed.socials = {
+          linkedin: { url: '', enabled: false },
+          instagram: { url: '', enabled: false },
+          whatsapp: { url: '', enabled: false },
+          facebook: { url: '', enabled: false },
+          twitter: { url: '', enabled: false },
+          youtube: { url: '', enabled: false }
+        };
       }
       
       return processed;

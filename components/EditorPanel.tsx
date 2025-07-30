@@ -243,7 +243,7 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ card, onUpdate, hasUns
         onUpdate({
             ...card,
             companyLogoPosition: {
-                ...card.companyLogoPosition,
+                ...card.companyLogoPosition || { x: 50, y: 50 },
                 [axis]: Number(value),
             },
         });
@@ -307,12 +307,12 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ card, onUpdate, hasUns
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-dark-text-secondary mb-2">Logo Horizontal ({card.companyLogoPosition.x}%)</label>
-                                    <input type="range" min="0" max="100" value={card.companyLogoPosition.x} onChange={(e) => handlePositionChange('x', e.target.value)} />
+                                    <label className="block text-sm font-medium text-dark-text-secondary mb-2">Logo Horizontal ({card.companyLogoPosition?.x || 50}%)</label>
+                                    <input type="range" min="0" max="100" value={card.companyLogoPosition?.x || 50} onChange={(e) => handlePositionChange('x', e.target.value)} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-dark-text-secondary mb-2">Logo Vertical ({card.companyLogoPosition.y}%)</label>
-                                    <input type="range" min="0" max="100" value={card.companyLogoPosition.y} onChange={(e) => handlePositionChange('y', e.target.value)} />
+                                    <label className="block text-sm font-medium text-dark-text-secondary mb-2">Logo Vertical ({card.companyLogoPosition?.y || 50}%)</label>
+                                    <input type="range" min="0" max="100" value={card.companyLogoPosition?.y || 50} onChange={(e) => handlePositionChange('y', e.target.value)} />
                                 </div>
                             </div>
                         </div>
@@ -376,8 +376,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ card, onUpdate, hasUns
                     />
                     {card.cardBackLogoUrl && (
                         <div>
-                            <label className="block text-sm font-medium text-dark-text-secondary mb-2">Back Logo Size ({card.cardBackLogoSize}px)</label>
-                            <input type="range" min="50" max="250" value={card.cardBackLogoSize} onChange={(e) => handleSliderChange('cardBackLogoSize', e.target.value)} />
+                                                            <label className="block text-sm font-medium text-dark-text-secondary mb-2">Back Logo Size ({card.cardBackLogoSize || 160}px)</label>
+                                <input type="range" min="50" max="250" value={card.cardBackLogoSize || 160} onChange={(e) => handleSliderChange('cardBackLogoSize', e.target.value)} />
                         </div>
                     )}
                 </div>

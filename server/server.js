@@ -2,12 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-// ES module equivalent of __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Load environment variables
 dotenv.config({ path: './config.env' });
@@ -25,218 +19,112 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// In-memory storage for when MongoDB is not available
-let inMemoryCards = new Map();
-let cardCounter = 0;
-
-// Helper function to generate card ID
-const generateCardId = () => {
-  return `card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-};
-
 // Add request logging
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
 
-// Connect to MongoDB
+// MongoDB Connection Management
+let isMongoConnected = false;
+let mongoConnectionRetries = 0;
+const MAX_RETRIES = 5;
+
 const connectDB = async () => {
   try {
     if (!process.env.MONGODB_URI) {
-      console.log('No MongoDB URI provided, running without database');
-      return;
+      console.log('❌ No MongoDB URI provided, running without database');
+      return false;
     }
     
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('MongoDB connected successfully');
+    console.log('🔌 Attempting to connect to MongoDB...');
+    
+    // Configure mongoose for better connection handling
+    mongoose.set('strictQuery', false);
+    
+    // Connection options for better reliability
+    const options = {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000, // 5 seconds
+      socketTimeoutMS: 45000, // 45 seconds
+      bufferMaxEntries: 0,
+      maxPoolSize: 10,
+      retryWrites: true,
+      w: 'majority'
+    };
+    
+    await mongoose.connect(process.env.MONGODB_URI, options);
+    
+    // Set up connection event listeners
+    mongoose.connection.on('connected', () => {
+      console.log('✅ MongoDB connected successfully');
+      isMongoConnected = true;
+      mongoConnectionRetries = 0;
+    });
+    
+    mongoose.connection.on('error', (err) => {
+      console.error('❌ MongoDB connection error:', err.message);
+      isMongoConnected = false;
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+      console.log('⚠️ MongoDB disconnected');
+      isMongoConnected = false;
+      // Attempt to reconnect
+      setTimeout(() => {
+        if (!isMongoConnected && mongoConnectionRetries < MAX_RETRIES) {
+          mongoConnectionRetries++;
+          console.log(`🔄 Attempting to reconnect to MongoDB (attempt ${mongoConnectionRetries}/${MAX_RETRIES})`);
+          connectDB();
+        }
+      }, 5000);
+    });
+    
+    mongoose.connection.on('reconnected', () => {
+      console.log('✅ MongoDB reconnected');
+      isMongoConnected = true;
+      mongoConnectionRetries = 0;
+    });
+    
+    return true;
   } catch (error) {
-    console.error('Error connecting to MongoDB:', error.message);
-    console.log('Starting server without database connection...');
-    // Continue without database for now
+    console.error('❌ Error connecting to MongoDB:', error.message);
+    isMongoConnected = false;
+    
+    if (mongoConnectionRetries < MAX_RETRIES) {
+      mongoConnectionRetries++;
+      console.log(`🔄 Retrying MongoDB connection in 5 seconds (attempt ${mongoConnectionRetries}/${MAX_RETRIES})`);
+      setTimeout(() => connectDB(), 5000);
+    } else {
+      console.log('⚠️ Max retries reached, continuing without MongoDB');
+    }
+    
+    return false;
   }
 };
 
-connectDB();
-
-// Routes
-app.use('/api/cards', (await import('./routes/cards.js')).default);
-
-// Health check endpoint
+// Health check endpoint that includes MongoDB status
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
     message: 'Glydus API is running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    mongodb: {
+      connected: isMongoConnected,
+      connectionState: mongoose.connection.readyState,
+      retries: mongoConnectionRetries
+    }
   });
 });
 
-// Handle short URL redirects
-app.get('/card/:shortId', async (req, res) => {
-  try {
-    const { shortId } = req.params;
-    
-    // Import the cards router to access the shortUrls Map
-    const cardsRouter = await import('./routes/cards.js');
-    const shortUrls = cardsRouter.default.shortUrls || new Map();
-    
-    // Get card ID from short URL
-    const cardId = shortUrls.get(shortId);
-    
-    if (!cardId) {
-      return res.status(404).json({ error: 'Short URL not found' });
-    }
+// Routes
+import cardsRouter from './routes/cards.js';
+app.use('/api/cards', cardsRouter);
 
-    // Find the card
-    let card;
-    try {
-      const Card = (await import('./models/Card.js')).default;
-      card = await Card.findById(cardId);
-    } catch (error) {
-      card = null;
-    }
-
-    if (!card) {
-      return res.status(404).json({ error: 'Card not found' });
-    }
-
-    // Redirect to a secure shared view route
-    res.redirect(`/shared/${shortId}`);
-  } catch (error) {
-    console.error('Error redirecting short URL:', error);
-    res.status(500).json({ error: 'Failed to redirect' });
-  }
-});
-
-// Secure shared card view route
-app.get('/shared/:shortId', async (req, res) => {
-  try {
-    const { shortId } = req.params;
-    
-    // Set security headers
-    res.set({
-      'X-Robots-Tag': 'noindex, nofollow',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-      'X-Frame-Options': 'DENY',
-      'X-Content-Type-Options': 'nosniff'
-    });
-    
-    // Import the cards router to access the shortUrls Map
-    const cardsRouter = await import('./routes/cards.js');
-    const shortUrls = cardsRouter.default.shortUrls || new Map();
-    
-    // Get card ID from short URL
-    const cardId = shortUrls.get(shortId);
-    
-    if (!cardId) {
-      return res.status(404).send(`
-        <html>
-          <head><title>Card Not Found</title></head>
-          <body style="font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #1a1a1a; color: white;">
-            <div style="text-align: center;">
-              <h1>Card Not Found</h1>
-              <p>The shared card link is invalid or has expired.</p>
-            </div>
-          </body>
-        </html>
-      `);
-    }
-
-    // Find the card
-    let card;
-    try {
-      const Card = (await import('./models/Card.js')).default;
-      card = await Card.findById(cardId);
-    } catch (error) {
-      card = null;
-    }
-
-    if (!card) {
-      return res.status(404).send(`
-        <html>
-          <head><title>Card Not Found</title></head>
-          <body style="font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #1a1a1a; color: white;">
-            <div style="text-align: center;">
-              <h1>Card Not Found</h1>
-              <p>The shared card could not be loaded.</p>
-            </div>
-          </body>
-        </html>
-      `);
-    }
-
-    // Serve a secure HTML page that loads the card data
-    const secureHtml = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${card.name || 'Digital Business Card'}</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <meta name="robots" content="noindex, nofollow">
-          <meta name="googlebot" content="noindex, nofollow">
-          <style>
-            body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
-            #root { width: 100%; height: 100vh; }
-          </style>
-        </head>
-        <body>
-          <div id="root"></div>
-          <script>
-            // Prevent access to admin dashboard
-            window.history.pushState(null, '', window.location.href);
-            window.addEventListener('popstate', function() {
-              window.history.pushState(null, '', window.location.href);
-            });
-            
-            // Prevent right-click context menu
-            document.addEventListener('contextmenu', function(e) {
-              e.preventDefault();
-            });
-            
-            // Prevent keyboard shortcuts for navigation
-            document.addEventListener('keydown', function(e) {
-              if (e.ctrlKey || e.metaKey) {
-                e.preventDefault();
-              }
-            });
-            
-            // Load the card data securely
-            window.cardData = ${JSON.stringify(card)};
-            window.location.href = '/?shared=true&cardId=${cardId}';
-          </script>
-        </body>
-      </html>
-    `;
-    
-    res.send(secureHtml);
-  } catch (error) {
-    console.error('Error serving shared card:', error);
-    res.status(500).send(`
-      <html>
-        <head><title>Error</title></head>
-        <body style="font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #1a1a1a; color: white;">
-          <div style="text-align: center;">
-            <h1>Error</h1>
-            <p>Failed to load the shared card.</p>
-          </div>
-        </body>
-      </html>
-    `);
-  }
-});
-
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../dist')));
-  
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist/index.html'));
-  });
-}
-
-// Start server
+// Start the server first, then try to connect to database
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  // Try to connect to database after server is running
+  connectDB();
 }); 

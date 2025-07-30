@@ -39,35 +39,17 @@ router.post('/shorten', async (req, res) => {
             return res.status(400).json({ error: 'Card ID is required' });
         }
 
-        console.log('Looking for card with ID:', cardId);
-
-        // Find the card - try MongoDB first, then in-memory fallback
-        let card = null;
-        
-        // Try MongoDB first
+        // Find the card
+        let card;
         try {
             card = await Card.findById(cardId);
-            console.log('Card found in MongoDB:', card ? 'Yes' : 'No');
         } catch (error) {
-            console.log('MongoDB lookup failed, trying in-memory storage');
-        }
-
-        // If not found in MongoDB, try in-memory storage
-        if (!card) {
-            card = inMemoryCards.get(cardId);
-            console.log('Card found in memory:', card ? 'Yes' : 'No');
+            // Fallback to in-memory if database fails
+            card = null;
         }
 
         if (!card) {
-            console.log('Card not found in database or memory. Available cards:');
-            try {
-                const mongoCards = await Card.find().then(cards => cards.map(c => c._id));
-                console.log('MongoDB cards:', mongoCards);
-            } catch (mongoError) {
-                console.log('MongoDB query failed:', mongoError.message);
-            }
-            console.log('Memory cards:', Array.from(inMemoryCards.keys()));
-            return res.status(404).json({ error: 'Card not found. Please save the card first before creating a short URL.' });
+            return res.status(404).json({ error: 'Card not found' });
         }
 
         // Generate short ID
@@ -76,10 +58,9 @@ router.post('/shorten', async (req, res) => {
         // Store the mapping
         shortUrls.set(shortId, cardId);
         
-        // Create short URL - simple local development
-        const shortUrl = `http://localhost:5173/?shortId=${shortId}`;
-        
-        console.log('Short URL created:', shortUrl);
+        // Create short URL - use production URL
+        const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173';
+        const shortUrl = `${baseUrl}/?shortId=${shortId}`;
         
         res.json({ 
             shortUrl, 
@@ -179,53 +160,7 @@ router.get('/', async (req, res) => {
         }
     } catch (error) {
         console.error('Error fetching cards:', error);
-        // If MongoDB fails completely, use in-memory fallback
-        try {
-            const fallbackCards = Array.from(inMemoryCards.values());
-            if (fallbackCards.length === 0) {
-                // Add a sample card if no cards exist
-                const sampleCard = {
-                    _id: 'card-1753786588098',
-                    cardName: 'Sample Business Card',
-                    name: 'John Doe',
-                    title: 'CEO',
-                    companyName: 'Sample Company',
-                    companyWebsite: 'https://example.com',
-                    email: 'john@example.com',
-                    phone: '+1 (555) 123-4567',
-                    address: '123 Business St, City, State 12345',
-                    addressLink: 'https://maps.google.com/?q=123+Business+St,+City,+State+12345',
-                    calendlyLink: 'https://calendly.com/your-username',
-                    profilePictureUrl: '',
-                    companyLogoUrl: '',
-                    companyLogoPosition: { x: 50, y: 50 },
-                    companyLogoSize: 140,
-                    cardBackLogoUrl: '',
-                    cardBackLogoSize: 160,
-                    socials: {
-                        linkedin: { url: '', enabled: false },
-                        instagram: { url: '', enabled: false },
-                        whatsapp: { url: '', enabled: false },
-                        facebook: { url: '', enabled: false },
-                        twitter: { url: '', enabled: false },
-                        youtube: { url: '', enabled: false }
-                    },
-                    styleOptions: {
-                        accentColor: '#00D1A6'
-                    },
-                    meetingButtonText: 'Book a Meeting',
-                    saveContactButtonText: 'Save Contact',
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                };
-                inMemoryCards.set(sampleCard._id, sampleCard);
-                return res.json([sampleCard]);
-            }
-            return res.json(fallbackCards);
-        } catch (fallbackError) {
-            console.error('Fallback also failed:', fallbackError);
-            res.status(500).json({ error: 'Failed to fetch cards' });
-        }
+        res.status(500).json({ error: 'Failed to fetch cards' });
     }
 });
 
@@ -277,21 +212,7 @@ router.post('/', async (req, res) => {
         }
     } catch (error) {
         console.error('Error creating card:', error);
-        // If MongoDB fails completely, use in-memory fallback
-        try {
-            const cardId = generateCardId();
-            const fallbackCard = {
-                ...req.body,
-                _id: cardId,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            };
-            inMemoryCards.set(cardId, fallbackCard);
-            return res.status(201).json(fallbackCard);
-        } catch (fallbackError) {
-            console.error('Fallback also failed:', fallbackError);
-            res.status(500).json({ error: 'Failed to create card' });
-        }
+        res.status(500).json({ error: 'Failed to create card' });
     }
 });
 
