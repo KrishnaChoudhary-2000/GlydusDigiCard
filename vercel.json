@@ -7,12 +7,16 @@
       "config": {
         "distDir": "dist"
       }
+    },
+    {
+      "src": "server/server.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "dest": "/server/server.js"
     },
     {
       "src": "/(.*)",
@@ -20,6 +24,11 @@
     }
   ],
   "env": {
-    "REACT_APP_API_URL": "@react_app_api_url"
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "server/server.js": {
+      "maxDuration": 30
+    }
   }
 } 
