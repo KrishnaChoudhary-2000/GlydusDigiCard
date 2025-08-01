@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ExecutiveData, SocialLink } from '../types';
-import { CollapsibleSection } from './AppUI';
+import { CollapsibleSection } from '../assets/icons';
 import { LinkedInIcon, InstagramIcon, WhatsAppIcon, FacebookIcon, XIcon, YouTubeIcon } from '../assets/icons';
 import { apiService } from '../services/api';
 
@@ -134,10 +134,10 @@ const FileInputField: React.FC<{ label: string; id: string; currentImageUrl: str
     };
 
     return (
-        <div>
-            <label className="block text-sm font-medium text-dark-text-secondary mb-2">{label}</label>
-            <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-lg bg-dark-surface border-2 border-dashed border-dark-border flex items-center justify-center text-dark-text-secondary relative overflow-hidden">
+        <div className="space-y-3">
+            <label className="block text-sm font-medium text-dark-text-secondary">{label}</label>
+            <div className="flex items-start gap-4">
+                <div className="w-16 h-16 rounded-lg bg-dark-surface border-2 border-dashed border-dark-border flex items-center justify-center text-dark-text-secondary relative overflow-hidden flex-shrink-0">
                     {currentImageUrl ? (
                         <>
                             <img src={currentImageUrl} alt="Current" className="w-full h-full object-cover" />
@@ -151,19 +151,26 @@ const FileInputField: React.FC<{ label: string; id: string; currentImageUrl: str
                         </div>
                     )}
                 </div>
-                <div className="flex flex-col gap-2">
-                    <label htmlFor={id} className={`cursor-pointer bg-dark-panel hover:bg-dark-border/70 text-dark-text-primary font-semibold py-2 px-4 rounded-lg transition-colors text-sm ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                <div className="flex flex-col gap-2 flex-1">
+                    <label htmlFor={id} className={`cursor-pointer bg-dark-panel hover:bg-dark-border/70 text-dark-text-primary font-semibold py-2 px-4 rounded-lg transition-colors text-sm text-center ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
                         {isUploading ? 'Uploading...' : (currentImageUrl ? 'Change Image' : 'Upload Image')}
                     </label>
-                    {currentImageUrl && <button onClick={onClear} className="text-xs text-red-400 hover:underline text-left">Remove</button>}
+                    {currentImageUrl && (
+                        <button 
+                            onClick={onClear} 
+                            className="text-xs text-red-400 hover:text-red-300 hover:underline text-center transition-colors"
+                        >
+                            Remove
+                        </button>
+                    )}
                     <input id={id} type="file" accept="image/*" onChange={handleFileChange} className="hidden" disabled={isUploading} />
                 </div>
             </div>
             {error && (
-                <p className="text-sm text-red-400 mt-2">{error}</p>
+                <p className="text-sm text-red-400">{error}</p>
             )}
             {success && (
-                <p className="text-sm text-green-400 mt-2">{success}</p>
+                <p className="text-sm text-green-400">{success}</p>
             )}
         </div>
     );
@@ -210,7 +217,7 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ card, onUpdate, hasUns
         }
     };
     
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'profilePictureUrl' | 'companyLogoUrl' | 'cardBackLogoUrl') => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         // This function is now handled by the FileInputField component with ImgBB integration
         // The field and value are passed through the synthetic event
         const fieldName = e.target.name as 'profilePictureUrl' | 'companyLogoUrl' | 'cardBackLogoUrl';
@@ -254,7 +261,7 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ card, onUpdate, hasUns
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             {hasUnsavedChanges && (
                 <div className="bg-yellow-600/10 border border-yellow-600/20 rounded-lg p-4 flex items-center gap-3">
                     <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
@@ -282,7 +289,7 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ card, onUpdate, hasUns
                         id="profilePictureUrl" 
                         currentImageUrl={card.profilePictureUrl}
                         onClear={() => handleClearFile('profilePictureUrl')}
-                        onChange={(e) => handleFileChange(e, 'profilePictureUrl')} 
+                        onChange={(e) => handleFileChange(e)} 
                         />
                     </div>
                 </div>
@@ -297,7 +304,7 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ card, onUpdate, hasUns
                         id="companyLogoUrl" 
                         currentImageUrl={card.companyLogoUrl}
                         onClear={() => handleClearFile('companyLogoUrl')}
-                        onChange={(e) => handleFileChange(e, 'companyLogoUrl')} 
+                        onChange={(e) => handleFileChange(e)} 
                      />
                      {card.companyLogoUrl && (
                         <div className="space-y-4 pt-4 mt-4 border-t border-dark-border/50">
@@ -372,7 +379,7 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ card, onUpdate, hasUns
                         id="cardBackLogoUrl" 
                         currentImageUrl={card.cardBackLogoUrl}
                         onClear={() => handleClearFile('cardBackLogoUrl')}
-                        onChange={(e) => handleFileChange(e, 'cardBackLogoUrl')} 
+                        onChange={(e) => handleFileChange(e)} 
                     />
                     {card.cardBackLogoUrl && (
                         <div>

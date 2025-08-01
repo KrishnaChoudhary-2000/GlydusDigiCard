@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ExecutiveData, DEFAULT_CARD_DATA } from '../types';
 import { CardPreview } from './Card';
 import { CardBack } from './Card';
-import { Icons } from './AppUI';
+import { Icons } from '../assets/icons';
 import { apiService } from '../services/api';
 
 // --- BASE MODAL ---
@@ -121,7 +121,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, card, o
     const [error, setError] = useState<string | null>(null);
 
     const generateShortUrl = async () => {
-        if (!card?._id && !card?.id) {
+        if (!card?.id) {
             setError('Please save the card first to generate a short URL');
             return;
         }
@@ -130,7 +130,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, card, o
         setError(null);
 
         try {
-            const cardId = card._id || card.id;
+            const cardId = card.id;
             console.log('Attempting to create short URL for card:', cardId);
             const response = await apiService.createShortUrl(cardId);
             
@@ -150,7 +150,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, card, o
     };
 
     const handleCopy = () => {
-        const urlToCopy = shortUrl || `${window.location.origin}${window.location.pathname}?card=${card?._id || card?.id}`;
+        const urlToCopy = shortUrl || `${window.location.origin}${window.location.pathname}?card=${card?.id}`;
         navigator.clipboard.writeText(urlToCopy);
         setCopied(true);
         onCopy();

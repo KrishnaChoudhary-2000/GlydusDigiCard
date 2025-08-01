@@ -111,24 +111,22 @@ export const CardPreview: React.FC<{ data: ExecutiveData | null; onUpdate: (upda
             <header 
                 className="relative h-24"
             >
-              <a
-                href={companyWebsite}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="absolute transition-transform duration-300 hover:scale-105"
-                style={{
-                  left: `${data.companyLogoPosition?.x || 50}%`,
-                  top: `${data.companyLogoPosition?.y || 50}%`,
-                  transform: 'translate(-50%, -50%)',
-                  width: `${data.companyLogoSize || 140}px`,
-                }}
-              >
-                {companyLogoUrl ? (
+              {companyLogoUrl && (
+                <a
+                  href={companyWebsite}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute transition-transform duration-300 hover:scale-105"
+                  style={{
+                    left: `${data.companyLogoPosition?.x || 50}%`,
+                    top: `${data.companyLogoPosition?.y || 50}%`,
+                    transform: 'translate(-50%, -50%)',
+                    width: `${data.companyLogoSize || 140}px`,
+                  }}
+                >
                   <img src={companyLogoUrl} alt={`${data.companyName} logo`} className="max-h-[80px] w-full object-contain pointer-events-none" />
-                ) : (
-                  <GlydusLogo isCardLogo={true} />
-                )}
-              </a>
+                </a>
+              )}
             </header>
             
             <div className="relative p-6 md:p-8 pt-0 -mt-10">
