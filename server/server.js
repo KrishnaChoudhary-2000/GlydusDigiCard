@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
+import { specs } from './swagger.js';
 
 // Load environment variables from multiple sources for Vercel compatibility
 dotenv.config({ path: './config.env' });
@@ -12,8 +14,8 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-domain.vercel.app', 'https://your-domain.com'] 
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://your-domain.vercel.app', 'https://your-domain.com']
     : true,
   credentials: true
 }));
@@ -50,7 +52,7 @@ const connectDB = async (isRetry = false) => {
   try {
     // Configure mongoose for better connection handling
     mongoose.set('strictQuery', false);
-    
+
     // Enhanced connection options for Vercel
     const options = {
       useNewUrlParser: true,
@@ -67,15 +69,15 @@ const connectDB = async (isRetry = false) => {
       compressors: ['zlib'],
       zlibCompressionLevel: 6
     };
-    
+
     // Create connection with timeout
     const connectionPromise = mongoose.connect(process.env.MONGODB_URI, options);
-    const timeoutPromise = new Promise((_, reject) => 
+    const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('Connection timeout')), CONNECTION_TIMEOUT)
     );
-    
+
     await Promise.race([connectionPromise, timeoutPromise]);
-    
+
     // Set up connection event listeners
     mongoose.connection.on('connected', () => {
       dbState.isConnected = true;
@@ -88,7 +90,7 @@ const connectDB = async (isRetry = false) => {
       dbState.isConnected = false;
       dbState.isConnecting = false;
       dbState.lastError = error.message;
-      
+
       if (dbState.retryCount < MAX_RETRIES) {
         dbState.retryCount++;
         setTimeout(() => connectDB(true), RETRY_DELAY);
@@ -104,7 +106,7 @@ const connectDB = async (isRetry = false) => {
     dbState.isConnected = false;
     dbState.isConnecting = false;
     dbState.lastError = error.message;
-    
+
     if (dbState.retryCount < MAX_RETRIES) {
       dbState.retryCount++;
       setTimeout(() => connectDB(true), RETRY_DELAY);
@@ -125,6 +127,12 @@ connectDB();
 
 // Routes
 import cardsRouter from './routes/cards.js';
+
+// Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Glydus Digital Card API Documentation'
+}));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

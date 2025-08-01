@@ -4,6 +4,11 @@ yarn-debug.log*
 yarn-error.log*
 node_modules/
 
+# Package lock files
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
 # Production builds
 dist/
 build/
