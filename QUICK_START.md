@@ -16,7 +16,15 @@ This guide will get you up and running with the Glydus Digital Card application 
 ```bash
 git clone <repository-url>
 cd GlydusDigiCard
-pnpm install
+
+# Option 1: Use installation script (recommended)
+./install.bat          # Windows
+./install.sh           # Unix/Linux
+
+# Option 2: Manual installation
+pnpm install           # Root dependencies
+cd client && pnpm install && cd ..  # Client dependencies
+cd server && pnpm install && cd ..  # Server dependencies
 ```
 
 ### 2. Environment Setup
