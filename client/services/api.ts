@@ -2,13 +2,15 @@ import type { ExecutiveData } from '../types';
 
 // Dynamic API configuration for both local and production
 const getApiBaseUrl = () => {
-  // Check if we're in production (Vercel)
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    // Use environment variable or fallback to a deployed backend URL
-    return process.env.REACT_APP_API_URL || 'https://your-backend-url.vercel.app/api';
+  // In Vite, use import.meta.env and prefix with VITE_
+  const isDev = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV;
+  if (isDev) {
+    // Local development - rely on Vite proxy or dev server rewrite
+    return '/api';
   }
-  // Local development
-  return 'http://localhost:5000/api';
+  // Production - use explicit API URL when provided, otherwise same-origin
+  const apiUrl = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || '';
+  return apiUrl ? `${apiUrl.replace(/\/$/, '')}/api` : '/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();

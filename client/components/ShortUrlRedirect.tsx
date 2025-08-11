@@ -15,9 +15,9 @@ export const ShortUrlRedirect: React.FC<ShortUrlRedirectProps> = ({ shortId }) =
         setLoading(true);
         const response = await apiService.getCardByShortId(shortId);
         
-        if (response.success && response.data) {
-          // Redirect to the card with the full data
-          const cardData = encodeURIComponent(JSON.stringify(response.data));
+        if (response.data) {
+          // Redirect to the card with the full data (base64-encoded)
+          const cardData = btoa(JSON.stringify(response.data));
           window.location.href = `/?card=${cardData}`;
         } else {
           setError('Card not found or invalid short ID');

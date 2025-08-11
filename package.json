@@ -3,10 +3,7 @@
     "version": "1.0.0",
     "description": "Full-stack digital business card application",
     "private": true,
-    "workspaces": [
-        "client",
-        "server"
-    ],
+
     "scripts": {
         "dev": "concurrently \"pnpm run dev:server\" \"pnpm run dev:client\"",
         "dev:client": "cd client && pnpm run dev",
@@ -38,13 +35,5 @@
         "full-stack"
     ],
     "author": "Glydus Team",
-    "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/your-username/GlydusDigiCard.git"
-    },
-    "bugs": {
-        "url": "https://github.com/your-username/GlydusDigiCard/issues"
-    },
-    "homepage": "https://github.com/your-username/GlydusDigiCard#readme"
+    "license": "MIT"  
 }

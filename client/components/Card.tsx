@@ -61,7 +61,7 @@ export const CardPreview: React.FC<{ data: ExecutiveData | null; onUpdate: (upda
     const { name, title, companyWebsite, profilePictureUrl, companyLogoUrl, socials } = data;
     
     // Safety check for styleOptions
-    const styleOptions = data.styleOptions || { accentColor: '#00D1A6' };
+    const styleOptions = data.styleOptions || { accentColor: 'rgba(0,167,128,255)' };
   
     const formattedPhone = data.phone.startsWith('+91')
       ? data.phone.replace(/^\+(\d{2})(\d{5})(\d{5})/, '+$1 $2 $3')
@@ -144,6 +144,9 @@ export const CardPreview: React.FC<{ data: ExecutiveData | null; onUpdate: (upda
                   <section className={`text-center mb-6 ${!profilePictureUrl ? 'pt-8' : ''}`}>
                       <h1 className="text-4xl font-bold text-white tracking-tight premium-h1-shadow name-display leading-tight">{name}</h1>
                       <p className="text-sm mt-3 font-medium text-gray-300 tracking-widest uppercase">{title}</p>
+                      {data.companyName && (
+                          <p className="text-sm mt-1 font-medium text-gray-400 tracking-wide">{data.companyName}</p>
+                      )}
                   </section>
               </div>
       
@@ -202,9 +205,9 @@ export const CardPreview: React.FC<{ data: ExecutiveData | null; onUpdate: (upda
                   </section>
                   </>
               )}
-              <div className="pt-8 text-center text-xs font-semibold text-[#00D1A6] tracking-widest uppercase">
-                MAKE WAVES
-              </div>
+                             <div className="pt-8 text-center text-xs font-semibold tracking-widest uppercase" style={{ color: styleOptions.accentColor }}>
+                 MAKE WAVES
+               </div>
             </div>
         </div>
       </div>
@@ -213,6 +216,9 @@ export const CardPreview: React.FC<{ data: ExecutiveData | null; onUpdate: (upda
 
 export const CardBack: React.FC<{ data: ExecutiveData | null }> = ({ data }) => {
     if (!data) return null;
+  
+    // Safety check for styleOptions
+    const styleOptions = data.styleOptions || { accentColor: 'rgba(0,167,128,255)' };
   
     return (
       <div className="w-full h-full card-face flex flex-col items-center justify-center p-8 text-center text-white font-sans premium-card-base rounded-3xl premium-card-bg">
@@ -226,9 +232,9 @@ export const CardBack: React.FC<{ data: ExecutiveData | null }> = ({ data }) => 
             />
           ) : null}
         </div>
-        <div className="relative z-10 text-xs font-semibold text-[#00D1A6] tracking-widest uppercase">
-          MAKE WAVES
-        </div>
+                 <div className="relative z-10 text-xs font-semibold tracking-widest uppercase" style={{ color: styleOptions.accentColor }}>
+           MAKE WAVES
+         </div>
       </div>
     );
   };

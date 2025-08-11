@@ -196,7 +196,7 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ card, onUpdate, hasUns
     }
 
     // Safety check for styleOptions
-    const styleOptions = card.styleOptions || { accentColor: '#00D1A6' };
+    const styleOptions = card.styleOptions || { accentColor: 'rgba(0,167,128,255)' };
     
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = e.target;

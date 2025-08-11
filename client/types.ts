@@ -66,7 +66,7 @@ export const DEFAULT_CARD_DATA: Omit<ExecutiveData, 'id' | 'cardName'> = {
     cardBackLogoUrl: null,
     cardBackLogoSize: 150,
     styleOptions: {
-        accentColor: "#3b82f6",
+        accentColor: "rgba(0,167,128,255)",
     },
     meetingButtonText: "Book a Meeting",
     saveContactButtonText: "Save Contact",

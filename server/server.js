@@ -5,170 +5,123 @@ import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import { specs } from './swagger.js';
 
-// Load environment variables from multiple sources for Vercel compatibility
-dotenv.config({ path: './config.env' });
-dotenv.config(); // Also load from .env file if it exists
+// Load environment variables
+dotenv.config();
 
 const app = express();
+// Trust proxy in production so req.protocol/host are correct behind proxies
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
 const PORT = process.env.PORT || 5000;
+
+console.log(`🚀 Starting server on port ${PORT}`);
 
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? ['https://your-domain.vercel.app', 'https://your-domain.com']
-    : true,
+  origin: (origin, callback) => {
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    const allowed = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+    if (!origin || allowed.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Database connection state management
-let dbState = {
-  isConnected: false,
-  isConnecting: false,
-  retryCount: 0,
-  lastError: null,
-  connectionStartTime: null
-};
+// Health check endpoint (must come before routes)
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
 
-const MAX_RETRIES = 10;
-const RETRY_DELAY = 3000; // 3 seconds
-const CONNECTION_TIMEOUT = 10000; // 10 seconds
+// Database status endpoint (must come before routes)
+app.get('/api/db-status', (req, res) => {
+  res.json({
+    connected: mongoose.connection.readyState === 1,
+    database: mongoose.connection.db?.databaseName || 'unknown',
+    collections: mongoose.connection.db ? 'available' : 'unknown'
+  });
+});
 
-// Enhanced database connection function
-const connectDB = async (isRetry = false) => {
-  if (dbState.isConnecting) {
-    return;
-  }
-
-  if (!process.env.MONGODB_URI) {
-    dbState.isConnected = false;
-    return;
-  }
-
-  dbState.isConnecting = true;
-  dbState.connectionStartTime = Date.now();
-
+// Simple MongoDB connection
+const connectDB = async () => {
   try {
-    // Configure mongoose for better connection handling
-    mongoose.set('strictQuery', false);
+    if (!process.env.MONGODB_URI) {
+      console.error('❌ MONGODB_URI environment variable is not set');
+      console.log('💡 Please create a .env file with your MongoDB connection string');
+      return false;
+    }
 
-    // Enhanced connection options for Vercel
+    console.log('🔌 Connecting to MongoDB...');
+    
     const options = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: CONNECTION_TIMEOUT,
+      serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
-      bufferMaxEntries: 0,
-      maxPoolSize: 5, // Reduced for serverless
-      minPoolSize: 1,
-      retryWrites: true,
-      w: 'majority',
-      // Vercel-specific optimizations
-      maxIdleTimeMS: 30000,
-      compressors: ['zlib'],
-      zlibCompressionLevel: 6
     };
 
-    // Create connection with timeout
-    const connectionPromise = mongoose.connect(process.env.MONGODB_URI, options);
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Connection timeout')), CONNECTION_TIMEOUT)
-    );
-
-    await Promise.race([connectionPromise, timeoutPromise]);
-
-    // Set up connection event listeners
-    mongoose.connection.on('connected', () => {
-      dbState.isConnected = true;
-      dbState.isConnecting = false;
-      dbState.retryCount = 0;
-      dbState.lastError = null;
-    });
-
-    mongoose.connection.on('error', (error) => {
-      dbState.isConnected = false;
-      dbState.isConnecting = false;
-      dbState.lastError = error.message;
-
-      if (dbState.retryCount < MAX_RETRIES) {
-        dbState.retryCount++;
-        setTimeout(() => connectDB(true), RETRY_DELAY);
-      }
-    });
-
-    mongoose.connection.on('disconnected', () => {
-      dbState.isConnected = false;
-      dbState.isConnecting = false;
-    });
-
+    await mongoose.connect(process.env.MONGODB_URI, options);
+    
+    console.log('✅ MongoDB connected successfully!');
+    console.log(`🗄️  Database: ${mongoose.connection.db.databaseName}`);
+    console.log(`📊 Collections: ${(await mongoose.connection.db.listCollections().toArray()).map(c => c.name).join(', ')}`);
+    
+    return true;
   } catch (error) {
-    dbState.isConnected = false;
-    dbState.isConnecting = false;
-    dbState.lastError = error.message;
-
-    if (dbState.retryCount < MAX_RETRIES) {
-      dbState.retryCount++;
-      setTimeout(() => connectDB(true), RETRY_DELAY);
-    }
+    console.error('❌ MongoDB connection failed:', error.message);
+    return false;
   }
 };
 
-// Schedule retry function
-const scheduleRetry = () => {
-  if (dbState.retryCount < MAX_RETRIES) {
-    dbState.retryCount++;
-    setTimeout(() => connectDB(true), RETRY_DELAY);
-  }
-};
-
-// Initial connection attempt
-connectDB();
-
-// Routes
+// Import routes
 import cardsRouter from './routes/cards.js';
 
-// Swagger UI
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'Glydus Digital Card API Documentation'
-}));
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    uptime: process.uptime(),
-    memory: process.memoryUsage(),
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Database status endpoint
-app.get('/api/db-status', (req, res) => {
-  res.json({
-    connected: dbState.isConnected,
-    connecting: dbState.isConnecting,
-    retryCount: dbState.retryCount,
-    hasUri: !!process.env.MONGODB_URI,
-    lastError: dbState.lastError
-  });
-});
-
-// API routes
+// Routes
 app.use('/api/cards', cardsRouter);
+
+// Swagger documentation (development only, or enable with ENABLE_SWAGGER=true)
+if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_SWAGGER === 'true') {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
+  console.error('❌ Server error:', err);
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
-
 // Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-}); 
+const startServer = async () => {
+  const dbConnected = await connectDB();
+  
+  if (dbConnected) {
+    app.listen(PORT, () => {
+      console.log(`🎉 Server running on http://localhost:${PORT}`);
+      console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+      console.log(`🔍 Health Check: http://localhost:${PORT}/api/health`);
+      console.log(`🗄️  DB Status: http://localhost:${PORT}/api/db-status`);
+    });
+  } else {
+    console.log('⚠️  Starting server without database connection');
+    console.log('💡 Cards will be stored in memory (not persistent)');
+    
+    app.listen(PORT, () => {
+      console.log(`🎉 Server running on http://localhost:${PORT}`);
+      console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+      console.log(`🔍 Health Check: http://localhost:${PORT}/api/health`);
+      console.log(`🗄️  DB Status: http://localhost:${PORT}/api/db-status`);
+    });
+  }
+};
+
+startServer(); 

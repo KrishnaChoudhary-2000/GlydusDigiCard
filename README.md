@@ -81,9 +81,11 @@ pnpm run dev:server  # Backend only
 ```
 
 ### 4. Access Application
-- **Frontend**: http://localhost:5173
+- **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:5000
 - **API Docs**: http://localhost:5000/api-docs
+
+> 📖 **Port Configuration**: See [PORT_CONFIGURATION.md](PORT_CONFIGURATION.md) for detailed port setup information.
 
 ## 📚 Documentation
 

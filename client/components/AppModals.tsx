@@ -4,6 +4,7 @@ import { ExecutiveData, DEFAULT_CARD_DATA } from '../types';
 import { CardPreview } from './Card';
 import { CardBack } from './Card';
 import { Icons } from '../assets/icons';
+import QRCode from 'react-qr-code';
 import { apiService } from '../services/api';
 
 // --- BASE MODAL ---
@@ -119,6 +120,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, card, o
     const [shortUrl, setShortUrl] = useState<string>('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showQR, setShowQR] = useState<boolean>(false);
 
     const generateShortUrl = async () => {
         if (!card?.id) {
@@ -150,7 +152,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, card, o
     };
 
     const handleCopy = () => {
-        const urlToCopy = shortUrl || `${window.location.origin}${window.location.pathname}?card=${card?.id}`;
+        const urlToCopy = shortUrl || `${window.location.origin}/card/${card?._id || card?.id}`;
         navigator.clipboard.writeText(urlToCopy);
         setCopied(true);
         onCopy();
@@ -173,7 +175,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, card, o
                 <h2 className="text-xl font-bold mb-4">Share Your Card</h2>
                 <p className="text-dark-text-secondary mb-4">
                     {shortUrl ? 
-                        'Perfect for NFC cards! Copy the short link below:' : 
+                        'Perfect for NFC and QR! Copy or generate the code below:' : 
                         'Generating short URL for NFC compatibility...'
                     }
                 </p>
@@ -213,12 +215,66 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, card, o
 
                 {shortUrl && (
                     <div className="mt-4 p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
-                        <p className="text-green-400 text-sm">
-                            ✅ NFC Ready: This short URL can fit in an 80-bit NFC card!
-                        </p>
-                        <p className="text-green-400/70 text-xs mt-1">
-                            URL length: {shortUrl.length} characters
-                        </p>
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <div>
+                                <p className="text-green-400 text-sm">✅ NFC & QR Ready</p>
+                                <p className="text-green-400/70 text-xs">URL length: {shortUrl.length} characters</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setShowQR((v) => !v)}
+                                    className="px-3 py-1.5 rounded-md bg-dark-panel hover:bg-dark-border text-dark-text-primary text-sm border border-dark-border"
+                                >
+                                    {showQR ? 'Hide QR' : 'Show QR'}
+                                </button>
+                                <a
+                                    href={shortUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="px-3 py-1.5 rounded-md bg-brand-accent hover:bg-brand-accent-hover text-white text-sm"
+                                >
+                                    Open Link
+                                </a>
+                            </div>
+                        </div>
+                        {showQR && (
+                            <div className="mt-4 flex flex-col items-center gap-3">
+                                <div className="bg-white p-3 rounded-lg">
+                                    <QRCode value={shortUrl} size={168} level="M" />
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => {
+                                            // Download QR as PNG
+                                            try {
+                                                const svg = document.querySelector('#share-modal-qr svg') as SVGSVGElement | null;
+                                                if (!svg) return;
+                                                const xml = new XMLSerializer().serializeToString(svg);
+                                                const svg64 = btoa(unescape(encodeURIComponent(xml)));
+                                                const image64 = `data:image/svg+xml;base64,${svg64}`;
+                                                const link = document.createElement('a');
+                                                link.href = image64;
+                                                link.download = 'glydus-card-qr.svg';
+                                                link.click();
+                                            } catch {}
+                                        }}
+                                        className="px-3 py-1.5 rounded-md bg-dark-panel hover:bg-dark-border text-dark-text-primary text-sm border border-dark-border"
+                                    >
+                                        Download QR
+                                    </button>
+                                    <button
+                                        onClick={() => navigator.clipboard.writeText(shortUrl)}
+                                        className="px-3 py-1.5 rounded-md bg-dark-panel hover:bg-dark-border text-dark-text-primary text-sm border border-dark-border"
+                                    >
+                                        Copy URL
+                                    </button>
+                                </div>
+                                {/* Hidden container to query the SVG for export */}
+                                <div id="share-modal-qr" className="hidden">
+                                    <QRCode value={shortUrl} size={168} level="M" />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

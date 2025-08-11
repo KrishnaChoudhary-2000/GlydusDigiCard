@@ -65,11 +65,14 @@ const App: React.FC = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const cardDataParam = urlParams.get('card');
     const shortIdParam = urlParams.get('shortId');
+    // Support path-based short links like /card/:shortId
+    const pathMatch = window.location.pathname.match(/^\/card\/(\w{4,})$/);
+    const shortIdFromPath = pathMatch ? pathMatch[1] : null;
     const sharedParam = urlParams.get('shared');
     const cardIdParam = urlParams.get('cardId');
 
     // Security: Prevent access to admin dashboard from shared links
-    const isSharedLink = cardDataParam || shortIdParam || sharedParam;
+    const isSharedLink = cardDataParam || shortIdParam || shortIdFromPath || sharedParam;
     
     // If this is a shared link, prevent any navigation to admin dashboard
     if (isSharedLink) {
@@ -111,8 +114,8 @@ const App: React.FC = () => {
     }
 
     // Handle short URL redirects
-    if (shortIdParam) {
-        return <ShortUrlRedirect shortId={shortIdParam} />;
+    if (shortIdParam || shortIdFromPath) {
+        return <ShortUrlRedirect shortId={(shortIdParam || shortIdFromPath)!} />;
     }
 
     if (cardDataParam) {
